@@ -1,0 +1,60 @@
+{
+  "header": {
+    "slogan": "Bridal glam that speaks elegance, confidence, and enduring beauty."
+  },
+  "profile": {
+    "name": "Deepz_beautyjourney",
+    "namePrimary": "Deepz",
+    "namePrimaryColor": "#8b3a3a",
+    "nameSecondary": "_beautyjourney",
+    "nameSecondaryColor": "#1a2b5f",
+    "title": "Makeup Artist",
+    "tagline": "M U A | Bridal, Special events ,",
+    "description": "Crafting looks - From soft glam to bold statements",
+    "location": "Serving chennai & Beyond",
+    "inquiries": "Inquiries : DM or Whatsapp",
+    "phone": "+ 91 -8825651866"
+  },
+  "form": {
+    "title": "Customer Information",
+    "fields": [
+      {
+        "id": "name",
+        "label": "Name",
+        "required": true,
+        "placeholder": "Eg. Aravinthan",
+        "type": "text"
+      },
+      {
+        "id": "mobile",
+        "label": "Mobile Number",
+        "required": true,
+        "placeholder": "Eg. +91 | 8072578302",
+        "type": "tel",
+        "maxLength": 10
+      },
+      {
+        "id": "email",
+        "label": "Email id",
+        "required": true,
+        "placeholder": "Eg. kanavinthun364@gmail.com",
+        "type": "email"
+      },
+      {
+        "id": "service",
+        "label": "Type of service",
+        "required": true,
+        "placeholder": "Eg. Services",
+        "type": "text"
+      },
+      {
+        "id": "message",
+        "label": "Message",
+        "required": true,
+        "placeholder": "Eg. I need bridal makeup for my wedding on...",
+        "type": "textarea"
+      }
+    ],
+    "submitButton": "Get Quote"
+  }
+}

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deepz_beautyjourney | Makeup Artist</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-bg" aria-hidden="true"></div>
+  <div class="page">
+    <h1 class="header-slogan" id="slogan">Bridal glam that speaks elegance, confidence, and enduring beauty.</h1>
+
+    <main class="main-content">
+      <section class="profile-section" aria-label="Artist information">
+        <h2 class="profile-name">
+          <span class="profile-name-primary" id="profile-name-primary">Deepz</span><span class="profile-name-secondary" id="profile-name-secondary">_beautyjourney</span>
+        </h2>
+        <div class="profile-logo">
+          <img src="icon.png" alt="" />
+        </div>
+        <p class="profile-title" id="profile-title">Makeup Artist</p>
+        <div class="profile-details">
+          <p id="profile-tagline">M U A | Bridal, Special events ,</p>
+          <p id="profile-description">Crafting looks - From soft glam to bold statements</p>
+          <p id="profile-location">Serving chennai &amp; Beyond</p>
+          <p id="profile-inquiries">Inquiries : DM or Whatsapp</p>
+          <p class="profile-phone" id="profile-phone">+ 91 -8825651866</p>
+        </div>
+      </section>
+
+      <section class="form-section" aria-label="Customer information form">
+        <h2 class="form-title" id="form-title">Customer Information</h2>
+        <form id="quote-form" novalidate action="#" method="post">
+          <div class="form-group">
+            <label for="name">Name <span class="required">*</span></label>
+            <input type="text" id="name" name="name" placeholder="Eg. Aravinthan" required />
+            <span class="error-msg" id="error-name">Please enter your name</span>
+          </div>
+          <div class="form-group">
+            <label for="mobile">Mobile Number <span class="required">*</span></label>
+            <input type="tel" id="mobile" name="mobile" placeholder="Eg. +91 | 8072578302" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" required />
+            <span class="error-msg" id="error-mobile">Please enter a 10 digit mobile number</span>
+          </div>
+          <div class="form-group">
+            <label for="email">Email id <span class="required">*</span></label>
+            <input type="email" id="email" name="email" placeholder="Eg. kanavinthun364@gmail.com" required />
+            <span class="error-msg" id="error-email">Please enter your email id</span>
+          </div>
+          <div class="form-group">
+            <label for="service">Type of service <span class="required">*</span></label>
+            <input type="text" id="service" name="service" placeholder="Eg. Services" required />
+            <span class="error-msg" id="error-service">Please enter type of service</span>
+          </div>
+          <button type="submit" class="submit-btn" id="submit-btn">Get Quote</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="content.js"></script>
+  <script>
+    function applyPageContent(data) {
+      if (!data) return;
+
+      document.getElementById("slogan").textContent = data.header.slogan;
+      var namePrimary = document.getElementById("profile-name-primary");
+      var nameSecondary = document.getElementById("profile-name-secondary");
+      namePrimary.textContent = data.profile.namePrimary;
+      nameSecondary.textContent = data.profile.nameSecondary;
+      if (data.profile.namePrimaryColor) namePrimary.style.color = data.profile.namePrimaryColor;
+      if (data.profile.nameSecondaryColor) nameSecondary.style.color = data.profile.nameSecondaryColor;
+      document.getElementById("profile-title").textContent = data.profile.title;
+      document.getElementById("profile-tagline").textContent = data.profile.tagline;
+      document.getElementById("profile-description").textContent = data.profile.description;
+      document.getElementById("profile-location").textContent = data.profile.location;
+      document.getElementById("profile-inquiries").textContent = data.profile.inquiries;
+      document.getElementById("profile-phone").textContent = data.profile.phone;
+      document.getElementById("form-title").textContent = data.form.title;
+      document.getElementById("submit-btn").textContent = data.form.submitButton;
+
+      data.form.fields.forEach(function (field) {
+        var input = document.getElementById(field.id);
+        if (input) {
+          input.placeholder = field.placeholder;
+          input.required = field.required;
+          if (field.maxLength) input.maxLength = field.maxLength;
+          if (field.type !== "textarea") {
+            input.type = field.type;
+          }
+          var label = document.querySelector('label[for="' + field.id + '"]');
+          if (label) {
+            label.innerHTML = field.label + ' <span class="required">*</span>';
+          }
+        }
+      });
+    }
+
+    applyPageContent(window.pageContent);
+
+    var responseFileHandle = null;
+
+    function formatResponseEntry(formData) {
+      var now = new Date();
+      return {
+        submitted_at: now.toLocaleString("en-IN", { hour12: false }),
+        name: formData.name,
+        mobile: formData.mobile,
+        email: formData.email,
+        service: formData.service
+      };
+    }
+
+    function getResponseFileHandle() {
+      if (responseFileHandle) {
+        return Promise.resolve(responseFileHandle);
+      }
+      if (!window.showOpenFilePicker) {
+        return Promise.reject(new Error("File picker not supported"));
+      }
+      return window.showOpenFilePicker({
+        id: "deepz-response-file",
+        multiple: false,
+        suggestedName: "ResponseFile.json",
+        types: [{ description: "JSON", accept: { "application/json": [".json"] } }]
+      }).then(function (handles) {
+        responseFileHandle = handles[0];
+        return responseFileHandle;
+      });
+    }
+
+    function saveToResponseFileClient(entry) {
+      return getResponseFileHandle().then(function (handle) {
+        return handle.getFile().then(function (file) {
+          return file.text().then(function (existing) {
+            var responses = [];
+            if (existing.trim()) {
+              try {
+                var parsed = JSON.parse(existing);
+                if (Array.isArray(parsed)) {
+                  responses = parsed;
+                }
+              } catch (err) {
+                responses = [];
+              }
+            }
+            responses.push(entry);
+            var jsonText = JSON.stringify(responses, null, 2);
+            return handle.createWritable().then(function (writable) {
+              return writable.write(jsonText).then(function () {
+                return writable.close();
+              });
+            });
+          });
+        });
+      }).then(function () {
+        return { ok: true, data: { success: true } };
+      });
+    }
+
+    function saveSubmissionToFile(formData) {
+      var isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
+
+      if (isHttp) {
+        return fetch("save.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        }).then(function (res) {
+          return res.text().then(function (text) {
+            var data = {};
+            try {
+              data = JSON.parse(text);
+            } catch (err) {
+              data = { success: false, message: "Save failed" };
+            }
+            return { ok: res.ok, data: data };
+          });
+        }).catch(function () {
+          var entry = formatResponseEntry(formData);
+          return saveToResponseFileClient(entry);
+        });
+      }
+
+      var entry = formatResponseEntry(formData);
+      return saveToResponseFileClient(entry);
+    }
+
+    var fields = [
+      { id: "name", error: "error-name", emptyMsg: "Please enter your name" },
+      { id: "mobile", error: "error-mobile", emptyMsg: "Please enter a 10 digit mobile number", invalidMsg: "Please enter a 10 digit mobile number" },
+      { id: "email", error: "error-email", emptyMsg: "Please enter your email id" },
+      { id: "service", error: "error-service", emptyMsg: "Please enter type of service" }
+    ];
+
+    function validateForm() {
+      var valid = true;
+      fields.forEach(function (field) {
+        var input = document.getElementById(field.id);
+        var errorEl = document.getElementById(field.error);
+        if (!input || !errorEl) return;
+
+        var value = input.value.trim();
+        var empty = !value;
+        var emailInvalid = field.id === "email" && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        var mobileInvalid = field.id === "mobile" && value && !/^[0-9]{10}$/.test(value);
+
+        if (empty) {
+          errorEl.textContent = field.emptyMsg;
+          errorEl.classList.add("show");
+          input.classList.add("invalid");
+          valid = false;
+        } else if (mobileInvalid) {
+          errorEl.textContent = field.invalidMsg;
+          errorEl.classList.add("show");
+          input.classList.add("invalid");
+          valid = false;
+        } else if (emailInvalid) {
+          errorEl.textContent = "Please enter a valid email id";
+          errorEl.classList.add("show");
+          input.classList.add("invalid");
+          valid = false;
+        } else {
+          errorEl.classList.remove("show");
+          input.classList.remove("invalid");
+        }
+      });
+      return valid;
+    }
+
+    var mobileInput = document.getElementById("mobile");
+    if (mobileInput) {
+      mobileInput.addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, "").slice(0, 10);
+        var errorEl = document.getElementById("error-mobile");
+        if (/^[0-9]{10}$/.test(this.value)) {
+          errorEl.classList.remove("show");
+          this.classList.remove("invalid");
+        }
+      });
+    }
+
+    fields.forEach(function (field) {
+      if (field.id === "mobile") return;
+      var input = document.getElementById(field.id);
+      if (!input) return;
+      input.addEventListener("input", function () {
+        var errorEl = document.getElementById(field.error);
+        if (this.value.trim()) {
+          errorEl.classList.remove("show");
+          this.classList.remove("invalid");
+        }
+      });
+    });
+
+    document.getElementById("quote-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!validateForm()) return;
+
+      var form = e.target;
+      var submitBtn = document.getElementById("submit-btn");
+      var formData = {
+        name: document.getElementById("name").value.trim(),
+        mobile: document.getElementById("mobile").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        service: document.getElementById("service").value.trim()
+      };
+
+      submitBtn.disabled = true;
+
+      saveSubmissionToFile(formData)
+        .then(function (result) {
+          if (result.ok && result.data.success) {
+            alert("Thank you! Your quote request has been received.");
+            form.reset();
+          } else {
+            alert(result.data.message || "Could not save. Please try again.");
+          }
+        })
+        .catch(function () {
+          alert("Could not save to ResponseFile.json. Please select ResponseFile.json when asked.");
+        })
+        .finally(function () {
+          submitBtn.disabled = false;
+        });
+    });
+  </script>
+</body>
+</html>

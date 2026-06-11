@@ -1,0 +1,268 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --headline-color: #4a3548;
+  --text-blue: #1a2b5f;
+  --name-primary: #8b3a3a;
+  --button-blue: #3b82f6;
+  --button-hover: #2563eb;
+  --input-border: #d1d5db;
+  --required-red: #dc2626;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  min-height: 100vh;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--text-blue);
+  overflow-x: hidden;
+}
+
+.page-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  min-height: 100vh;
+  background-color: #d8c8d8;
+  background-image:
+    linear-gradient(
+      to right,
+      rgba(188, 168, 208, 0.78) 0%,
+      rgba(188, 168, 208, 0.72) 18%,
+      rgba(110, 85, 95, 0.42) 32%,
+      rgba(95, 75, 85, 0.48) 50%,
+      rgba(110, 85, 95, 0.42) 68%,
+      rgba(188, 168, 208, 0.72) 82%,
+      rgba(188, 168, 208, 0.78) 100%
+    ),
+    url("Background.jpeg");
+  background-position: center center, center center;
+  background-size: 100% 100%, cover;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.75rem 2rem 3rem;
+}
+
+.header-slogan {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: clamp(1.5rem, 3.2vw, 2.15rem);
+  font-weight: 700;
+  color: var(--headline-color);
+  text-align: center;
+  margin-bottom: 2.5rem;
+  line-height: 1.35;
+  max-width: 900px;
+  padding: 0 0.5rem;
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 4.5rem;
+  width: 100%;
+  max-width: 1040px;
+  align-items: start;
+}
+
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-top: 0.15rem;
+}
+
+.profile-name {
+  font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  line-height: 1.2;
+}
+
+.profile-name-primary {
+  color: var(--name-primary);
+}
+
+.profile-name-secondary {
+  color: var(--text-blue);
+}
+
+.profile-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.4rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.profile-logo img {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+}
+
+.profile-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-blue);
+  margin-bottom: 0.3rem;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  font-size: 0.88rem;
+  line-height: 1.48;
+  color: var(--text-blue);
+}
+
+.profile-phone {
+  margin-top: 0.15rem;
+  font-weight: 500;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding-top: 0.1rem;
+}
+
+.form-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-blue);
+  margin-bottom: 0.05rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.form-group label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-blue);
+}
+
+.required {
+  color: var(--required-red);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--input-border);
+  border-radius: 5px;
+  background: #fff;
+  font-size: 0.86rem;
+  font-family: inherit;
+  color: var(--text-blue);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  resize: vertical;
+}
+
+.form-group textarea {
+  min-height: 100px;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #9ca3af;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--button-blue);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.form-group input.invalid,
+.form-group textarea.invalid {
+  border-color: var(--required-red);
+}
+
+.error-msg {
+  display: none;
+  font-size: 0.74rem;
+  color: var(--required-red);
+}
+
+.error-msg.show {
+  display: block;
+}
+
+.submit-btn {
+  margin-top: 0.2rem;
+  width: 100%;
+  padding: 0.6rem 1.5rem;
+  background: var(--button-blue);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.submit-btn:hover {
+  background: var(--button-hover);
+}
+
+.submit-btn:active {
+  transform: scale(0.99);
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .page-bg {
+    background-position: center center, center center;
+    background-size: 100% 100%, cover;
+  }
+
+  .page {
+    padding: 1.75rem 1.25rem 2.5rem;
+  }
+
+  .main-content {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+
+  .header-slogan {
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+  }
+}
