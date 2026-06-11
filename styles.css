@@ -18,10 +18,13 @@
 
 html {
   font-size: 16px;
+  height: 100%;
 }
 
 body {
+  min-height: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   font-family: "Segoe UI", Roboto, Arial, sans-serif;
   color: var(--text-blue);
   overflow-x: hidden;
@@ -29,31 +32,47 @@ body {
 
 .page-bg {
   position: fixed;
-  inset: 0;
-  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   min-height: 100vh;
-  background-color: #d8c8d8;
-  background-image:
-    linear-gradient(
-      to right,
-      rgba(188, 168, 208, 0.78) 0%,
-      rgba(188, 168, 208, 0.72) 18%,
-      rgba(110, 85, 95, 0.42) 32%,
-      rgba(95, 75, 85, 0.48) 50%,
-      rgba(110, 85, 95, 0.42) 68%,
-      rgba(188, 168, 208, 0.72) 82%,
-      rgba(188, 168, 208, 0.78) 100%
-    ),
-    url("Background.jpeg");
-  background-position: center center, center center;
-  background-size: 100% 100%, cover;
-  background-repeat: no-repeat, no-repeat;
+  min-height: 100dvh;
+  z-index: 0;
+  overflow: hidden;
+  background-color: #2a1810;
+}
+
+.page-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("Background.jpeg") center center / cover no-repeat;
+  transform: scale(1.03);
+}
+
+.page-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(188, 168, 208, 0.78) 0%,
+    rgba(188, 168, 208, 0.72) 18%,
+    rgba(110, 85, 95, 0.42) 32%,
+    rgba(95, 75, 85, 0.48) 50%,
+    rgba(110, 85, 95, 0.42) 68%,
+    rgba(188, 168, 208, 0.72) 82%,
+    rgba(188, 168, 208, 0.78) 100%
+  );
+  pointer-events: none;
 }
 
 .page {
   position: relative;
   z-index: 1;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -64,12 +83,16 @@ body {
   font-family: "Segoe UI", Roboto, Arial, sans-serif;
   font-size: clamp(1.5rem, 3.2vw, 2.15rem);
   font-weight: 700;
-  color: var(--headline-color);
   text-align: center;
   margin-bottom: 2.5rem;
   line-height: 1.35;
   max-width: 900px;
   padding: 0 0.5rem;
+  background: linear-gradient(90deg, #e54b31 0%, #d672b6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .main-content {
@@ -247,11 +270,6 @@ body {
 }
 
 @media (max-width: 768px) {
-  .page-bg {
-    background-position: center center, center center;
-    background-size: 100% 100%, cover;
-  }
-
   .page {
     padding: 1.75rem 1.25rem 2.5rem;
   }

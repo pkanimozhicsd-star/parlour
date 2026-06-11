@@ -9,7 +9,7 @@
 <body>
   <div class="page-bg" aria-hidden="true"></div>
   <div class="page">
-    <h1 class="header-slogan" id="slogan">Bridal glam that speaks elegance, confidence, and enduring beauty.</h1>
+    <h1 class="header-slogan" id="slogan">Bridal glam that speaks elegance,<br />confidence, and enduring beauty.</h1>
 
     <main class="main-content">
       <section class="profile-section" aria-label="Artist information">
@@ -63,7 +63,7 @@
     function applyPageContent(data) {
       if (!data) return;
 
-      document.getElementById("slogan").textContent = data.header.slogan;
+      document.getElementById("slogan").innerHTML = data.header.slogan;
       var namePrimary = document.getElementById("profile-name-primary");
       var nameSecondary = document.getElementById("profile-name-secondary");
       namePrimary.textContent = data.profile.namePrimary;

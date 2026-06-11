@@ -1,6 +1,6 @@
 window.pageContent = {
   "header": {
-    "slogan": "Bridal glam that speaks elegance, confidence, and enduring beauty."
+    "slogan": "Bridal glam that speaks elegance,<br />confidence, and enduring beauty."
   },
   "profile": {
     "namePrimary": "Deepz",
