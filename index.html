@@ -158,13 +158,17 @@
       });
     }
 
+    function getSaveConfig() {
+      return (window.pageContent && window.pageContent.save) || {};
+    }
+
     function isGitHubPages() {
       return window.location.hostname.includes("github.io");
     }
 
     function getGoogleScriptUrl() {
-      var save = window.pageContent && window.pageContent.save;
-      return (save && save.googleScriptUrl) ? save.googleScriptUrl.trim() : "";
+      var save = getSaveConfig();
+      return (save.googleScriptUrl || "").trim();
     }
 
     function parseSaveResponse(res, text) {
@@ -179,15 +183,6 @@
 
     function saveViaGoogleScript(formData) {
       var url = getGoogleScriptUrl();
-      if (!url) {
-        return Promise.resolve({
-          ok: false,
-          data: {
-            success: false,
-            message: "Live site cannot run PHP. Add your Google Apps Script URL in content.js (see google-apps-script.txt)."
-          }
-        });
-      }
       return fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -196,6 +191,163 @@
         return res.text().then(function (text) {
           return parseSaveResponse(res, text);
         });
+      });
+    }
+
+    function saveViaLivePhp(formData) {
+      var save = getSaveConfig();
+      var url = (save.livePhpUrl || "").trim();
+      return fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      }).then(function (res) {
+        return res.text().then(function (text) {
+          return parseSaveResponse(res, text);
+        });
+      });
+    }
+
+    function saveViaWeb3Forms(formData, entry) {
+      var save = getSaveConfig();
+      return fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_key: save.web3formsAccessKey,
+          subject: "Deepz Quote Request",
+          name: formData.name,
+          mobile: formData.mobile,
+          email: formData.email,
+          service: formData.service,
+          submitted_at: entry.submitted_at
+        })
+      }).then(function (res) {
+        return res.json().then(function (data) {
+          return {
+            ok: data.success === true,
+            data: {
+              success: data.success === true,
+              message: data.message || (data.success ? "Saved" : "Could not save")
+            }
+          };
+        });
+      });
+    }
+
+    function saveViaJsonBin(entry) {
+      var save = getSaveConfig();
+      var binId = (save.jsonBinId || "").trim();
+      var masterKey = (save.jsonBinMasterKey || "").trim();
+      var headers = {
+        "Content-Type": "application/json",
+        "X-Master-Key": masterKey
+      };
+
+      return fetch("https://api.jsonbin.io/v3/b/" + binId + "/latest", {
+        method: "GET",
+        headers: headers
+      }).then(function (res) {
+        return res.json().then(function (binData) {
+          var responses = [];
+          if (binData.record && Array.isArray(binData.record)) {
+            responses = binData.record;
+          }
+          responses.push(entry);
+          return fetch("https://api.jsonbin.io/v3/b/" + binId, {
+            method: "PUT",
+            headers: headers,
+            body: JSON.stringify(responses)
+          }).then(function (putRes) {
+            return putRes.json().then(function (putData) {
+              var ok = putRes.ok;
+              return {
+                ok: ok,
+                data: {
+                  success: ok,
+                  message: ok ? "Saved to ResponseFile.json (JSONBin)" : "Could not update JSON store"
+                }
+              };
+            });
+          });
+        });
+      });
+    }
+
+    function saveViaFormSubmit(formData, entry) {
+      var save = getSaveConfig();
+      var email = (save.notificationEmail || "").trim();
+      return fetch("https://formsubmit.co/ajax/" + encodeURIComponent(email), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({
+          _subject: "Deepz Quote Request",
+          _template: "table",
+          submitted_at: entry.submitted_at,
+          name: formData.name,
+          mobile: formData.mobile,
+          email: formData.email,
+          service: formData.service
+        })
+      }).then(function (res) {
+        return res.json().then(function (data) {
+          var ok = res.ok;
+          return {
+            ok: ok,
+            data: {
+              success: ok,
+              message: ok
+                ? "Saved — you will receive this request by email."
+                : (data.message || "Could not save. Check notification email in content.js.")
+            }
+          };
+        }).catch(function () {
+          return {
+            ok: res.ok,
+            data: {
+              success: res.ok,
+              message: res.ok ? "Saved — you will receive this request by email." : "Could not save."
+            }
+          };
+        });
+      });
+    }
+
+    function saveLive(formData) {
+      var entry = formatResponseEntry(formData);
+      var save = getSaveConfig();
+      var gasUrl = getGoogleScriptUrl();
+      var livePhpUrl = (save.livePhpUrl || "").trim();
+      var web3Key = (save.web3formsAccessKey || "").trim();
+      var jsonBinId = (save.jsonBinId || "").trim();
+      var jsonBinKey = (save.jsonBinMasterKey || "").trim();
+      var notifyEmail = (save.notificationEmail || "").trim();
+
+      if (gasUrl) {
+        return saveViaGoogleScript(formData);
+      }
+      if (livePhpUrl) {
+        return saveViaLivePhp(formData);
+      }
+      if (web3Key) {
+        return saveViaWeb3Forms(formData, entry);
+      }
+      if (jsonBinId && jsonBinKey) {
+        return saveViaJsonBin(entry);
+      }
+      if (notifyEmail) {
+        return saveViaFormSubmit(formData, entry);
+      }
+
+      return Promise.resolve({
+        ok: false,
+        data: {
+          success: false,
+          message: "Live save is not configured. Add notificationEmail in content.js."
+        }
       });
     }
 
@@ -221,7 +373,7 @@
       }
 
       if (isGitHubPages()) {
-        return saveViaGoogleScript(formData);
+        return saveLive(formData);
       }
 
       return saveViaPhp(formData);
@@ -315,7 +467,11 @@
             alert("Thank you! Your quote request has been received.");
             form.reset();
           } else {
-            alert(result.data.message || "Could not save. Please try again.");
+            var msg = result.data.message || "Could not save. Please try again.";
+            if (isGitHubPages() && !getGoogleScriptUrl()) {
+              msg += "\n\nIf this is your first live save, check " + (getSaveConfig().notificationEmail || "your email") + " and click the FormSubmit activation link, then try again.";
+            }
+            alert(msg);
           }
         })
         .catch(function () {

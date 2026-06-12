@@ -25,6 +25,11 @@ window.pageContent = {
     ]
   },
   "save": {
-    "googleScriptUrl": ""
+    "googleScriptUrl": "",
+    "livePhpUrl": "",
+    "web3formsAccessKey": "",
+    "jsonBinId": "",
+    "jsonBinMasterKey": "",
+    "notificationEmail": "pkanimozhicsd@gmail.com"
   }
 };
