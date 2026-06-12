@@ -1,125 +1,50 @@
-LIVE SAVE — save form data to ResponseFile.json (GitHub Pages cannot run PHP)
-=============================================================================
+FIX doGet + save to your Google Sheet
+======================================
 
-FormSubmit only sends EMAIL. It does NOT save ResponseFile.json.
-Use ONE of these options:
+Your sheet:
+https://docs.google.com/spreadsheets/d/1PQJMqib3gKQ-ExgXs2TqfgqGbCHAzHx9B8u6qVs8gxI
 
-OPTION A — Free PHP host (same as local MAMP, easiest)
-------------------------------------------------------
-1. Sign up at https://www.infinityfree.com (free)
-2. Create a site → upload save.php and ResponseFile.json to htdocs
-3. Copy your site URL, e.g. https://deepzparlour.infinityfreeapp.com/save.php
-4. In content.js set:
-     "livePhpUrl": "https://deepzparlour.infinityfreeapp.com/save.php"
-5. In save.php add your InfinityFree URL to allowedOrigins if needed
-6. Push content.js to GitHub
+Your OLD script URL still has no doGet — you must use the script
+linked to YOUR sheet (steps below). The URL may change.
 
-OPTION B — Google Apps Script (saves ResponseFile.json in GitHub repo)
-------------------------------------------------------------------------
-1. Open https://script.google.com → New project
-2. Paste the CODE below → Save
-3. Project Settings → Script properties → Add:
-   - GITHUB_TOKEN  = GitHub Personal Access Token (repo scope)
-   - GITHUB_OWNER  = pkanimozhicsd-star
-   - GITHUB_REPO   = parlour
-   - GITHUB_PATH   = ResponseFile.json
-4. Deploy → New deployment → Type: Web app
-   - Execute as: Me
-   - Who has access: Anyone
-5. Copy the Web app URL
-6. In content.js set:
-     "googleScriptUrl": "https://script.google.com/macros/s/YOUR_ID/exec"
-7. Push content.js to GitHub
+STEP 1
+------
+Open your sheet (link above) → Extensions → Apps Script
 
-GITHUB TOKEN: GitHub → Settings → Developer settings → Personal access tokens
-Scope: repo (write access to parlour repository)
+STEP 2
+------
+Delete ALL code in ALL files (check left sidebar).
+Paste ALL of Code.gs from this folder → Save.
+Function dropdown must show: doGet
 
-CODE TO PASTE IN GOOGLE APPS SCRIPT
------------------------------------
+STEP 3
+------
+Select testSave → Run → Allow permissions (Google Sheets access)
+(Do NOT click Run on doPost — it only works from the website)
 
-function doPost(e) {
-  try {
-    var input = JSON.parse(e.postData.contents);
-    var name = (input.name || '').trim();
-    var mobile = (input.mobile || '').trim();
-    var email = (input.email || '').trim();
-    var service = (input.service || '').trim();
+STEP 4 — Check sheet for a "Test User" row after testSave runs
 
-    if (!name || !mobile || !email || !service) {
-      return jsonResponse({ success: false, message: 'All fields are required' });
-    }
-    if (!/^[0-9]{10}$/.test(mobile)) {
-      return jsonResponse({ success: false, message: 'Mobile number must be 10 digits' });
-    }
+STEP 4 — NEW deployment (use this, not Edit old one)
+------
+Deploy → New deployment
+Type: Web app
+Execute as: Me
+Who has access: Anyone
+Deploy → COPY the new /exec URL
 
-    var props = PropertiesService.getScriptProperties();
-    var token = props.getProperty('GITHUB_TOKEN');
-    var owner = props.getProperty('GITHUB_OWNER');
-    var repo = props.getProperty('GITHUB_REPO');
-    var path = props.getProperty('GITHUB_PATH');
+STEP 5
+------
+Put the NEW URL in content.js → googleSheets.scriptUrl
+Push to GitHub.
 
-    if (!token || !owner || !repo || !path) {
-      return jsonResponse({ success: false, message: 'Script properties not configured' });
-    }
+STEP 6 — Test
+------
+Open in browser (replace YOUR_NEW_EXEC_URL):
 
-    var apiUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path;
-    var sha = null;
-    var responses = [];
+YOUR_NEW_EXEC_URL?submitted_at=test&name=Test&mobile=1234567890&email=test@test.com&service=test
 
-    var getRes = UrlFetchApp.fetch(apiUrl, {
-      method: 'get',
-      headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' },
-      muteHttpExceptions: true
-    });
+Must show: {"success":true,"message":"Saved to Google Sheet"}
+Check your sheet for a new row.
 
-    if (getRes.getResponseCode() === 200) {
-      var fileMeta = JSON.parse(getRes.getContentText());
-      sha = fileMeta.sha;
-      var decoded = Utilities.newBlob(Utilities.base64Decode(fileMeta.content)).getDataAsString();
-      var parsed = JSON.parse(decoded);
-      if (Array.isArray(parsed)) responses = parsed;
-    } else if (getRes.getResponseCode() !== 404) {
-      return jsonResponse({ success: false, message: 'Could not read ResponseFile.json from GitHub' });
-    }
-
-    var now = new Date();
-    responses.push({
-      submitted_at: Utilities.formatDate(now, 'Asia/Kolkata', 'dd/MM/yyyy, HH:mm:ss'),
-      name: name,
-      mobile: mobile,
-      email: email,
-      service: service
-    });
-
-    var body = {
-      message: 'Add quote request from ' + name,
-      content: Utilities.base64Encode(JSON.stringify(responses, null, 2)),
-      sha: sha
-    };
-
-    var putRes = UrlFetchApp.fetch(apiUrl, {
-      method: 'put',
-      headers: {
-        Authorization: 'Bearer ' + token,
-        Accept: 'application/vnd.github+json',
-        'Content-Type': 'application/json'
-      },
-      payload: JSON.stringify(body),
-      muteHttpExceptions: true
-    });
-
-    if (putRes.getResponseCode() >= 200 && putRes.getResponseCode() < 300) {
-      return jsonResponse({ success: true, message: 'Saved to ResponseFile.json', file: 'ResponseFile.json' });
-    }
-
-    return jsonResponse({ success: false, message: 'Could not write to GitHub: ' + putRes.getContentText() });
-  } catch (err) {
-    return jsonResponse({ success: false, message: String(err) });
-  }
-}
-
-function jsonResponse(obj) {
-  var out = ContentService.createTextOutput(JSON.stringify(obj));
-  out.setMimeType(ContentService.MimeType.JSON);
-  return out;
-}
+If still "doGet not found" you are opening the OLD URL.
+Use the URL from Step 4 only.

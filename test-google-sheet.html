@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Test Google Sheet Save</title>
+</head>
+<body>
+  <h1>Test Google Sheet connection</h1>
+  <p>Use this after you paste <strong>Code.gs</strong> into Apps Script and deploy <strong>New version</strong>.</p>
+  <form method="POST" action="https://script.google.com/macros/s/AKfycbxgN-4DQLLQ7v8OR-DI5r71CBPp3Qx8QVOnD65l3OYuyYw4tSt9ZpWnIjCK8FDHUtLqsg/exec" id="gas-test-form">
+    <input type="hidden" name="submitted_at" value="13/06/2026, 12:00:00" />
+    <input type="hidden" name="name" value="Test User" />
+    <input type="hidden" name="mobile" value="1234567890" />
+    <input type="hidden" name="email" value="test@test.com" />
+    <input type="hidden" name="service" value="test service" />
+    <button type="submit">Send test row to Google Sheet</button>
+  </form>
+  <p>If it works you will see: <code>{"success":true,"message":"Saved to Google Sheet"}</code></p>
+  <p>If you see <code>doGet not found</code> on the main /exec URL, that is normal until you deploy Code.gs.</p>
+</body>
+</html>

@@ -24,11 +24,7 @@ window.pageContent = {
       { "id": "service", "label": "Type of service", "required": true, "placeholder": "Eg. Services", "type": "text" }
     ]
   },
-  "save": {
-    "livePhpUrl": "",
-    "googleScriptUrl": "",
-    "jsonBinId": "",
-    "jsonBinMasterKey": "",
-    "web3formsAccessKey": ""
+  "googleSheets": {
+    "scriptUrl": "https://script.google.com/macros/s/AKfycbzZojAHM3qGQRTTpC13T3WkRq835SXVhoP9t7RSeC44spUSPMUJHxerU7WU8H3brofJTw/exec"
   }
 };

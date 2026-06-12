@@ -98,8 +98,6 @@
 
     applyPageContent(window.pageContent);
 
-    var responseFileHandle = null;
-
     function pad2(n) {
       return n < 10 ? "0" + n : String(n);
     }
@@ -118,223 +116,56 @@
       };
     }
 
-    function getResponseFileHandle() {
-      if (responseFileHandle) {
-        return Promise.resolve(responseFileHandle);
-      }
-      if (!window.showOpenFilePicker) {
-        return Promise.reject(new Error("File picker not supported"));
-      }
-      return window.showOpenFilePicker({
-        id: "deepz-response-file",
-        multiple: false,
-        suggestedName: "ResponseFile.json",
-        types: [{ description: "JSON", accept: { "application/json": [".json"] } }]
-      }).then(function (handles) {
-        responseFileHandle = handles[0];
-        return responseFileHandle;
-      });
+    function getGoogleSheetsConfig() {
+      return (window.pageContent && window.pageContent.googleSheets) || {};
     }
 
-    function saveToResponseFileClient(entry) {
-      return getResponseFileHandle().then(function (handle) {
-        return handle.getFile().then(function (file) {
-          return file.text().then(function (existing) {
-            var responses = [];
-            if (existing.trim()) {
-              try {
-                var parsed = JSON.parse(existing);
-                if (Array.isArray(parsed)) {
-                  responses = parsed;
-                }
-              } catch (err) {
-                responses = [];
-              }
-            }
-            responses.push(entry);
-            var jsonText = JSON.stringify(responses, null, 2);
-            return handle.createWritable().then(function (writable) {
-              return writable.write(jsonText).then(function () {
-                return writable.close();
-              });
-            });
-          });
-        });
-      }).then(function () {
-        return { ok: true, data: { success: true } };
-      });
-    }
-
-    function getSaveConfig() {
-      return (window.pageContent && window.pageContent.save) || {};
-    }
-
-    function isGitHubPages() {
-      return window.location.hostname.includes("github.io");
-    }
-
-    function getGoogleScriptUrl() {
-      var save = getSaveConfig();
-      return (save.googleScriptUrl || "").trim();
-    }
-
-    function parseSaveResponse(res, text) {
-      var data = {};
-      try {
-        data = JSON.parse(text);
-      } catch (err) {
-        data = { success: false, message: "Save failed" };
-      }
-      return { ok: res.ok, data: data };
-    }
-
-    function saveViaGoogleScript(formData) {
-      var url = getGoogleScriptUrl();
-      return fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      }).then(function (res) {
-        return res.text().then(function (text) {
-          return parseSaveResponse(res, text);
-        });
-      });
-    }
-
-    function saveViaLivePhp(formData) {
-      var save = getSaveConfig();
-      var url = (save.livePhpUrl || "").trim();
-      return fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      }).then(function (res) {
-        return res.text().then(function (text) {
-          return parseSaveResponse(res, text);
-        });
-      });
-    }
-
-    function saveViaWeb3Forms(formData, entry) {
-      var save = getSaveConfig();
-      return fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          access_key: save.web3formsAccessKey,
-          subject: "Deepz Quote Request",
-          name: formData.name,
-          mobile: formData.mobile,
-          email: formData.email,
-          service: formData.service,
-          submitted_at: entry.submitted_at
-        })
-      }).then(function (res) {
-        return res.json().then(function (data) {
-          return {
-            ok: data.success === true,
-            data: {
-              success: data.success === true,
-              message: data.message || (data.success ? "Saved" : "Could not save")
-            }
-          };
-        });
-      });
-    }
-
-    function saveViaJsonBin(entry) {
-      var save = getSaveConfig();
-      var binId = (save.jsonBinId || "").trim();
-      var masterKey = (save.jsonBinMasterKey || "").trim();
-      var headers = {
-        "Content-Type": "application/json",
-        "X-Master-Key": masterKey
-      };
-
-      return fetch("https://api.jsonbin.io/v3/b/" + binId + "/latest", {
-        method: "GET",
-        headers: headers
-      }).then(function (res) {
-        return res.json().then(function (binData) {
-          var responses = [];
-          if (binData.record && Array.isArray(binData.record)) {
-            responses = binData.record;
-          }
-          responses.push(entry);
-          return fetch("https://api.jsonbin.io/v3/b/" + binId, {
-            method: "PUT",
-            headers: headers,
-            body: JSON.stringify(responses)
-          }).then(function (putRes) {
-            return {
-              ok: putRes.ok,
-              data: {
-                success: putRes.ok,
-                message: putRes.ok ? "Saved to ResponseFile.json" : "Could not update ResponseFile.json"
-              }
-            };
-          });
-        });
-      });
-    }
-
-    function saveLive(formData) {
+    function saveToGoogleSheet(formData) {
+      var cfg = getGoogleSheetsConfig();
+      var scriptUrl = (cfg.scriptUrl || "").trim().replace(/\/$/, "");
       var entry = formatResponseEntry(formData);
-      var save = getSaveConfig();
-      var livePhpUrl = (save.livePhpUrl || "").trim();
-      var gasUrl = getGoogleScriptUrl();
-      var jsonBinId = (save.jsonBinId || "").trim();
-      var jsonBinKey = (save.jsonBinMasterKey || "").trim();
-      var web3Key = (save.web3formsAccessKey || "").trim();
 
-      if (livePhpUrl) {
-        return saveViaLivePhp(formData);
-      }
-      if (gasUrl) {
-        return saveViaGoogleScript(formData);
-      }
-      if (jsonBinId && jsonBinKey) {
-        return saveViaJsonBin(entry);
-      }
-      if (web3Key) {
-        return saveViaWeb3Forms(formData, entry);
-      }
-
-      return Promise.resolve({
-        ok: false,
-        data: {
-          success: false,
-          message: "Live site cannot save to ResponseFile.json yet. Set livePhpUrl or googleScriptUrl in content.js — see google-apps-script.txt."
-        }
-      });
-    }
-
-    function saveViaPhp(formData) {
-      return fetch("save.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      }).then(function (res) {
-        return res.text().then(function (text) {
-          return parseSaveResponse(res, text);
+      if (!scriptUrl) {
+        return Promise.resolve({
+          ok: false,
+          data: {
+            success: false,
+            message: "Add your Google Apps Script URL in content.js → googleSheets.scriptUrl"
+          }
         });
+      }
+
+      if (scriptUrl.indexOf("script.google.com/macros/s/") === -1) {
+        return Promise.resolve({
+          ok: false,
+          data: {
+            success: false,
+            message: "Use the /exec URL from Deploy → Web app (not the googleusercontent.com link)."
+          }
+        });
+      }
+
+      var body = new URLSearchParams(entry).toString();
+
+      return fetch(scriptUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body
+      }).then(function () {
+        return {
+          ok: true,
+          data: { success: true, message: "Saved to Google Sheet" }
+        };
       }).catch(function () {
-        return saveToResponseFileClient(formatResponseEntry(formData));
+        return {
+          ok: false,
+          data: {
+            success: false,
+            message: "Could not reach Google Sheets. Deploy Apps Script with Who has access: Anyone (see google-apps-script.txt)."
+          }
+        };
       });
-    }
-
-    function saveSubmissionToFile(formData) {
-      var isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
-
-      if (!isHttp) {
-        return saveToResponseFileClient(formatResponseEntry(formData));
-      }
-
-      if (isGitHubPages()) {
-        return saveLive(formData);
-      }
-
-      return saveViaPhp(formData);
     }
 
     var fields = [
@@ -419,17 +250,17 @@
 
       submitBtn.disabled = true;
 
-      saveSubmissionToFile(formData)
+      saveToGoogleSheet(formData)
         .then(function (result) {
           if (result.ok && result.data.success) {
-            alert("Thank you! Saved to ResponseFile.json.");
+            alert("Thank you! Your quote request has been received.");
             form.reset();
           } else {
-            alert(result.data.message || "Could not save to ResponseFile.json. Please try again.");
+            alert(result.data.message || "Could not save. Please try again.");
           }
         })
         .catch(function () {
-          alert("Could not save to ResponseFile.json. Please select ResponseFile.json when asked.");
+          alert("Could not save. Please check your connection and try again.");
         })
         .finally(function () {
           submitBtn.disabled = false;
