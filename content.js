@@ -23,5 +23,8 @@ window.pageContent = {
       { "id": "email", "label": "Email id", "required": true, "placeholder": "Eg. kanavinthun364@gmail.com", "type": "email" },
       { "id": "service", "label": "Type of service", "required": true, "placeholder": "Eg. Services", "type": "text" }
     ]
+  },
+  "save": {
+    "googleScriptUrl": ""
   }
 };

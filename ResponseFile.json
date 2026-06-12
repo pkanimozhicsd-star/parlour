@@ -1,30 +1,37 @@
-  [
-  {
-    "submitted_at": "11/6/2026, 16:36:42",
-    "name": "Kanimozhi",
-    "mobile": "0987690987",
-    "email": "dev@kapiital.com",
-    "service": "loihjkjh"
-  },
-  {
-    "submitted_at": "11/6/2026, 16:39:03",
-    "name": "Santhosh",
-    "mobile": "9876987687",
-    "email": "pkanimozhicsd@gmail.com",
-    "service": "service"
-  },
-  {
-    "submitted_at": "11/6/2026, 17:18:09",
-    "name": "bbnbn",
-    "mobile": "9876567898",
-    "email": "santhosh@kapiital.com",
-    "service": "dd"
-  },
-  {
-    "submitted_at": "11/6/2026, 17:18:53",
-    "name": "Santhosh",
-    "mobile": "9765678987",
-    "email": "prabananth24@gmail.com",
-    "service": "uytr"
-  }
+[
+    {
+        "submitted_at": "11\/6\/2026, 16:36:42",
+        "name": "Kanimozhi",
+        "mobile": "0987690987",
+        "email": "dev@kapiital.com",
+        "service": "loihjkjh"
+    },
+    {
+        "submitted_at": "11\/6\/2026, 16:39:03",
+        "name": "Santhosh",
+        "mobile": "9876987687",
+        "email": "pkanimozhicsd@gmail.com",
+        "service": "service"
+    },
+    {
+        "submitted_at": "11\/6\/2026, 17:18:09",
+        "name": "bbnbn",
+        "mobile": "9876567898",
+        "email": "santhosh@kapiital.com",
+        "service": "dd"
+    },
+    {
+        "submitted_at": "11\/6\/2026, 17:18:53",
+        "name": "Santhosh",
+        "mobile": "9765678987",
+        "email": "prabananth24@gmail.com",
+        "service": "uytr"
+    },
+    {
+        "submitted_at": "12\/06\/2026, 15:40:04",
+        "name": "Kanimozhi P",
+        "mobile": "8765678987",
+        "email": "pkanimozhicsd@gmail.com",
+        "service": "ghjgh"
+    }
 ]

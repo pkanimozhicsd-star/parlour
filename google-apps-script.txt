@@ -1,0 +1,114 @@
+GOOGLE APPS SCRIPT — save live form data to ResponseFile.json on GitHub
+=========================================================================
+
+GitHub Pages cannot run PHP. Use this free Google Apps Script as your live save endpoint.
+
+SETUP (one time, ~5 minutes)
+----------------------------
+1. Open https://script.google.com → New project
+2. Paste the code below → Save
+3. Project Settings → Script properties → Add:
+   - GITHUB_TOKEN  = your GitHub Personal Access Token (repo scope)
+   - GITHUB_OWNER  = pkanimozhicsd-star
+   - GITHUB_REPO   = pkanimozhicsd-star.github.io
+   - GITHUB_PATH   = parlour/ResponseFile.json
+4. Deploy → New deployment → Type: Web app
+   - Execute as: Me
+   - Who has access: Anyone
+5. Copy the Web app URL
+6. Paste it in content.js → save.googleScriptUrl
+
+GITHUB TOKEN
+------------
+GitHub → Settings → Developer settings → Personal access tokens → Generate (classic)
+Scope: repo (full control of private repositories) — or fine-grained with Contents read/write on the repo
+
+CODE TO PASTE IN GOOGLE APPS SCRIPT
+-----------------------------------
+
+function doPost(e) {
+  try {
+    var input = JSON.parse(e.postData.contents);
+    var name = (input.name || '').trim();
+    var mobile = (input.mobile || '').trim();
+    var email = (input.email || '').trim();
+    var service = (input.service || '').trim();
+
+    if (!name || !mobile || !email || !service) {
+      return jsonResponse({ success: false, message: 'All fields are required' }, 400);
+    }
+    if (!/^[0-9]{10}$/.test(mobile)) {
+      return jsonResponse({ success: false, message: 'Mobile number must be 10 digits' }, 400);
+    }
+
+    var props = PropertiesService.getScriptProperties();
+    var token = props.getProperty('GITHUB_TOKEN');
+    var owner = props.getProperty('GITHUB_OWNER');
+    var repo = props.getProperty('GITHUB_REPO');
+    var path = props.getProperty('GITHUB_PATH');
+
+    if (!token || !owner || !repo || !path) {
+      return jsonResponse({ success: false, message: 'Script properties not configured' }, 500);
+    }
+
+    var apiUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path;
+    var sha = null;
+    var responses = [];
+
+    var getRes = UrlFetchApp.fetch(apiUrl, {
+      method: 'get',
+      headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' },
+      muteHttpExceptions: true
+    });
+
+    if (getRes.getResponseCode() === 200) {
+      var fileMeta = JSON.parse(getRes.getContentText());
+      sha = fileMeta.sha;
+      var decoded = Utilities.newBlob(Utilities.base64Decode(fileMeta.content)).getDataAsString();
+      var parsed = JSON.parse(decoded);
+      if (Array.isArray(parsed)) responses = parsed;
+    } else if (getRes.getResponseCode() !== 404) {
+      return jsonResponse({ success: false, message: 'Could not read ResponseFile.json from GitHub' }, 500);
+    }
+
+    var now = new Date();
+    responses.push({
+      submitted_at: Utilities.formatDate(now, 'Asia/Kolkata', 'dd/MM/yyyy, HH:mm:ss'),
+      name: name,
+      mobile: mobile,
+      email: email,
+      service: service
+    });
+
+    var body = {
+      message: 'Add quote request from ' + name,
+      content: Utilities.base64Encode(JSON.stringify(responses, null, 2)),
+      sha: sha
+    };
+
+    var putRes = UrlFetchApp.fetch(apiUrl, {
+      method: 'put',
+      headers: {
+        Authorization: 'Bearer ' + token,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      payload: JSON.stringify(body),
+      muteHttpExceptions: true
+    });
+
+    if (putRes.getResponseCode() >= 200 && putRes.getResponseCode() < 300) {
+      return jsonResponse({ success: true, message: 'Saved to ResponseFile.json', file: 'ResponseFile.json' });
+    }
+
+    return jsonResponse({ success: false, message: 'Could not write to GitHub: ' + putRes.getContentText() }, 500);
+  } catch (err) {
+    return jsonResponse({ success: false, message: String(err) }, 500);
+  }
+}
+
+function jsonResponse(obj, code) {
+  var out = ContentService.createTextOutput(JSON.stringify(obj));
+  out.setMimeType(ContentService.MimeType.JSON);
+  return out;
+}

@@ -158,32 +158,73 @@
       });
     }
 
+    function isGitHubPages() {
+      return window.location.hostname.includes("github.io");
+    }
+
+    function getGoogleScriptUrl() {
+      var save = window.pageContent && window.pageContent.save;
+      return (save && save.googleScriptUrl) ? save.googleScriptUrl.trim() : "";
+    }
+
+    function parseSaveResponse(res, text) {
+      var data = {};
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        data = { success: false, message: "Save failed" };
+      }
+      return { ok: res.ok, data: data };
+    }
+
+    function saveViaGoogleScript(formData) {
+      var url = getGoogleScriptUrl();
+      if (!url) {
+        return Promise.resolve({
+          ok: false,
+          data: {
+            success: false,
+            message: "Live site cannot run PHP. Add your Google Apps Script URL in content.js (see google-apps-script.txt)."
+          }
+        });
+      }
+      return fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      }).then(function (res) {
+        return res.text().then(function (text) {
+          return parseSaveResponse(res, text);
+        });
+      });
+    }
+
+    function saveViaPhp(formData) {
+      return fetch("save.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      }).then(function (res) {
+        return res.text().then(function (text) {
+          return parseSaveResponse(res, text);
+        });
+      }).catch(function () {
+        return saveToResponseFileClient(formatResponseEntry(formData));
+      });
+    }
+
     function saveSubmissionToFile(formData) {
       var isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
 
-      if (isHttp) {
-        return fetch("save.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData)
-        }).then(function (res) {
-          return res.text().then(function (text) {
-            var data = {};
-            try {
-              data = JSON.parse(text);
-            } catch (err) {
-              data = { success: false, message: "Save failed" };
-            }
-            return { ok: res.ok, data: data };
-          });
-        }).catch(function () {
-          var entry = formatResponseEntry(formData);
-          return saveToResponseFileClient(entry);
-        });
+      if (!isHttp) {
+        return saveToResponseFileClient(formatResponseEntry(formData));
       }
 
-      var entry = formatResponseEntry(formData);
-      return saveToResponseFileClient(entry);
+      if (isGitHubPages()) {
+        return saveViaGoogleScript(formData);
+      }
+
+      return saveViaPhp(formData);
     }
 
     var fields = [
