@@ -293,24 +293,21 @@
           service: formData.service
         })
       }).then(function (res) {
-        return res.json().then(function (data) {
-          var ok = res.ok;
+        return res.text().then(function (text) {
+          var data = {};
+          try {
+            data = JSON.parse(text);
+          } catch (err) {
+            data = {};
+          }
+          var jsonSuccess = data.success === true || data.success === "true";
+          var ok = res.ok && jsonSuccess;
+          var message = ok
+            ? "Saved — you will receive this request by email."
+            : (data.message || "Could not save. Check notification email in content.js.");
           return {
             ok: ok,
-            data: {
-              success: ok,
-              message: ok
-                ? "Saved — you will receive this request by email."
-                : (data.message || "Could not save. Check notification email in content.js.")
-            }
-          };
-        }).catch(function () {
-          return {
-            ok: res.ok,
-            data: {
-              success: res.ok,
-              message: res.ok ? "Saved — you will receive this request by email." : "Could not save."
-            }
+            data: { success: ok, message: message }
           };
         });
       });
