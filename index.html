@@ -100,10 +100,17 @@
 
     var responseFileHandle = null;
 
+    function pad2(n) {
+      return n < 10 ? "0" + n : String(n);
+    }
+
     function formatResponseEntry(formData) {
       var now = new Date();
+      var submittedAt =
+        pad2(now.getDate()) + "/" + pad2(now.getMonth() + 1) + "/" + now.getFullYear() +
+        ", " + pad2(now.getHours()) + ":" + pad2(now.getMinutes()) + ":" + pad2(now.getSeconds());
       return {
-        submitted_at: now.toLocaleString("en-IN", { hour12: false }),
+        submitted_at: submittedAt,
         name: formData.name,
         mobile: formData.mobile,
         email: formData.email,
@@ -259,56 +266,14 @@
             headers: headers,
             body: JSON.stringify(responses)
           }).then(function (putRes) {
-            return putRes.json().then(function (putData) {
-              var ok = putRes.ok;
-              return {
-                ok: ok,
-                data: {
-                  success: ok,
-                  message: ok ? "Saved to ResponseFile.json (JSONBin)" : "Could not update JSON store"
-                }
-              };
-            });
+            return {
+              ok: putRes.ok,
+              data: {
+                success: putRes.ok,
+                message: putRes.ok ? "Saved to ResponseFile.json" : "Could not update ResponseFile.json"
+              }
+            };
           });
-        });
-      });
-    }
-
-    function saveViaFormSubmit(formData, entry) {
-      var save = getSaveConfig();
-      var email = (save.notificationEmail || "").trim();
-      return fetch("https://formsubmit.co/ajax/" + encodeURIComponent(email), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify({
-          _subject: "Deepz Quote Request",
-          _template: "table",
-          submitted_at: entry.submitted_at,
-          name: formData.name,
-          mobile: formData.mobile,
-          email: formData.email,
-          service: formData.service
-        })
-      }).then(function (res) {
-        return res.text().then(function (text) {
-          var data = {};
-          try {
-            data = JSON.parse(text);
-          } catch (err) {
-            data = {};
-          }
-          var jsonSuccess = data.success === true || data.success === "true";
-          var ok = res.ok && jsonSuccess;
-          var message = ok
-            ? "Saved — you will receive this request by email."
-            : (data.message || "Could not save. Check notification email in content.js.");
-          return {
-            ok: ok,
-            data: { success: ok, message: message }
-          };
         });
       });
     }
@@ -316,34 +281,30 @@
     function saveLive(formData) {
       var entry = formatResponseEntry(formData);
       var save = getSaveConfig();
-      var gasUrl = getGoogleScriptUrl();
       var livePhpUrl = (save.livePhpUrl || "").trim();
-      var web3Key = (save.web3formsAccessKey || "").trim();
+      var gasUrl = getGoogleScriptUrl();
       var jsonBinId = (save.jsonBinId || "").trim();
       var jsonBinKey = (save.jsonBinMasterKey || "").trim();
-      var notifyEmail = (save.notificationEmail || "").trim();
+      var web3Key = (save.web3formsAccessKey || "").trim();
 
-      if (gasUrl) {
-        return saveViaGoogleScript(formData);
-      }
       if (livePhpUrl) {
         return saveViaLivePhp(formData);
       }
-      if (web3Key) {
-        return saveViaWeb3Forms(formData, entry);
+      if (gasUrl) {
+        return saveViaGoogleScript(formData);
       }
       if (jsonBinId && jsonBinKey) {
         return saveViaJsonBin(entry);
       }
-      if (notifyEmail) {
-        return saveViaFormSubmit(formData, entry);
+      if (web3Key) {
+        return saveViaWeb3Forms(formData, entry);
       }
 
       return Promise.resolve({
         ok: false,
         data: {
           success: false,
-          message: "Live save is not configured. Add notificationEmail in content.js."
+          message: "Live site cannot save to ResponseFile.json yet. Set livePhpUrl or googleScriptUrl in content.js — see google-apps-script.txt."
         }
       });
     }
@@ -461,14 +422,10 @@
       saveSubmissionToFile(formData)
         .then(function (result) {
           if (result.ok && result.data.success) {
-            alert("Thank you! Your quote request has been received.");
+            alert("Thank you! Saved to ResponseFile.json.");
             form.reset();
           } else {
-            var msg = result.data.message || "Could not save. Please try again.";
-            if (isGitHubPages() && !getGoogleScriptUrl()) {
-              msg += "\n\nIf this is your first live save, check " + (getSaveConfig().notificationEmail || "your email") + " and click the FormSubmit activation link, then try again.";
-            }
-            alert(msg);
+            alert(result.data.message || "Could not save to ResponseFile.json. Please try again.");
           }
         })
         .catch(function () {

@@ -1,27 +1,38 @@
-GOOGLE APPS SCRIPT — save live form data to ResponseFile.json on GitHub
-=========================================================================
+LIVE SAVE — save form data to ResponseFile.json (GitHub Pages cannot run PHP)
+=============================================================================
 
-GitHub Pages cannot run PHP. Use this free Google Apps Script as your live save endpoint.
+FormSubmit only sends EMAIL. It does NOT save ResponseFile.json.
+Use ONE of these options:
 
-SETUP (one time, ~5 minutes)
-----------------------------
+OPTION A — Free PHP host (same as local MAMP, easiest)
+------------------------------------------------------
+1. Sign up at https://www.infinityfree.com (free)
+2. Create a site → upload save.php and ResponseFile.json to htdocs
+3. Copy your site URL, e.g. https://deepzparlour.infinityfreeapp.com/save.php
+4. In content.js set:
+     "livePhpUrl": "https://deepzparlour.infinityfreeapp.com/save.php"
+5. In save.php add your InfinityFree URL to allowedOrigins if needed
+6. Push content.js to GitHub
+
+OPTION B — Google Apps Script (saves ResponseFile.json in GitHub repo)
+------------------------------------------------------------------------
 1. Open https://script.google.com → New project
-2. Paste the code below → Save
+2. Paste the CODE below → Save
 3. Project Settings → Script properties → Add:
-   - GITHUB_TOKEN  = your GitHub Personal Access Token (repo scope)
+   - GITHUB_TOKEN  = GitHub Personal Access Token (repo scope)
    - GITHUB_OWNER  = pkanimozhicsd-star
-   - GITHUB_REPO   = pkanimozhicsd-star.github.io
-   - GITHUB_PATH   = parlour/ResponseFile.json
+   - GITHUB_REPO   = parlour
+   - GITHUB_PATH   = ResponseFile.json
 4. Deploy → New deployment → Type: Web app
    - Execute as: Me
    - Who has access: Anyone
 5. Copy the Web app URL
-6. Paste it in content.js → save.googleScriptUrl
+6. In content.js set:
+     "googleScriptUrl": "https://script.google.com/macros/s/YOUR_ID/exec"
+7. Push content.js to GitHub
 
-GITHUB TOKEN
-------------
-GitHub → Settings → Developer settings → Personal access tokens → Generate (classic)
-Scope: repo (full control of private repositories) — or fine-grained with Contents read/write on the repo
+GITHUB TOKEN: GitHub → Settings → Developer settings → Personal access tokens
+Scope: repo (write access to parlour repository)
 
 CODE TO PASTE IN GOOGLE APPS SCRIPT
 -----------------------------------
@@ -35,10 +46,10 @@ function doPost(e) {
     var service = (input.service || '').trim();
 
     if (!name || !mobile || !email || !service) {
-      return jsonResponse({ success: false, message: 'All fields are required' }, 400);
+      return jsonResponse({ success: false, message: 'All fields are required' });
     }
     if (!/^[0-9]{10}$/.test(mobile)) {
-      return jsonResponse({ success: false, message: 'Mobile number must be 10 digits' }, 400);
+      return jsonResponse({ success: false, message: 'Mobile number must be 10 digits' });
     }
 
     var props = PropertiesService.getScriptProperties();
@@ -48,7 +59,7 @@ function doPost(e) {
     var path = props.getProperty('GITHUB_PATH');
 
     if (!token || !owner || !repo || !path) {
-      return jsonResponse({ success: false, message: 'Script properties not configured' }, 500);
+      return jsonResponse({ success: false, message: 'Script properties not configured' });
     }
 
     var apiUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path;
@@ -68,7 +79,7 @@ function doPost(e) {
       var parsed = JSON.parse(decoded);
       if (Array.isArray(parsed)) responses = parsed;
     } else if (getRes.getResponseCode() !== 404) {
-      return jsonResponse({ success: false, message: 'Could not read ResponseFile.json from GitHub' }, 500);
+      return jsonResponse({ success: false, message: 'Could not read ResponseFile.json from GitHub' });
     }
 
     var now = new Date();
@@ -101,13 +112,13 @@ function doPost(e) {
       return jsonResponse({ success: true, message: 'Saved to ResponseFile.json', file: 'ResponseFile.json' });
     }
 
-    return jsonResponse({ success: false, message: 'Could not write to GitHub: ' + putRes.getContentText() }, 500);
+    return jsonResponse({ success: false, message: 'Could not write to GitHub: ' + putRes.getContentText() });
   } catch (err) {
-    return jsonResponse({ success: false, message: String(err) }, 500);
+    return jsonResponse({ success: false, message: String(err) });
   }
 }
 
-function jsonResponse(obj, code) {
+function jsonResponse(obj) {
   var out = ContentService.createTextOutput(JSON.stringify(obj));
   out.setMimeType(ContentService.MimeType.JSON);
   return out;

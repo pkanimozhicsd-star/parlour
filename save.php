@@ -7,7 +7,11 @@ $allowedOrigins = [
     'http://localhost:8888',
     'http://127.0.0.1:8888'
 ];
-if ($origin && in_array($origin, $allowedOrigins, true)) {
+$originAllowed = $origin && (
+    in_array($origin, $allowedOrigins, true)
+    || preg_match('/^https:\/\/[a-z0-9.-]+\.(infinityfreeapp\.com|free\.nf)$/', $origin)
+);
+if ($originAllowed) {
     header('Access-Control-Allow-Origin: ' . $origin);
     header('Access-Control-Allow-Methods: POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');

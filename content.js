@@ -25,11 +25,10 @@ window.pageContent = {
     ]
   },
   "save": {
-    "googleScriptUrl": "",
     "livePhpUrl": "",
-    "web3formsAccessKey": "",
+    "googleScriptUrl": "",
     "jsonBinId": "",
     "jsonBinMasterKey": "",
-    "notificationEmail": "pkanimozhicsd@gmail.com"
+    "web3formsAccessKey": ""
   }
 };
